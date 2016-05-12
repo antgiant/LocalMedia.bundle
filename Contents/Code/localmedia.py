@@ -133,6 +133,7 @@ def findAssets(metadata, media_title, paths, type, parts=[]):
             if re_strip.sub('', d.lower()) == 'extras':
               Log('Found Extras Folder. %s' % (os.path.join(root, d)))
               extras_folder = os.path.join(root, d)
+              extras_folder_name = d
             for key in extra_type_map.keys():
               if re_strip.sub('', d.lower()).startswith(key):
                 for f in os.listdir(os.path.join(root, d)):
@@ -182,7 +183,7 @@ def findAssets(metadata, media_title, paths, type, parts=[]):
             # Files named exactly 'trailer' or starting with 'movie-trailer'.
             if (fn == 'trailer' or fn.startswith('movie-trailer')) and not fn.startswith('.') and ext[1:] in config.VIDEO_EXTS:
               Log('Found trailer extra, renaming with title: ' + media_title)
-              extras.append({'type' : key, 'title' : media_title, 'file' : os.path.join(path, f)})
+              extras.append({'type' : key, 'title' : media_title, 'file' : os.path.join(path, extras_folder_name, f)})
 
             # Files following the "-extra" convention.
             else:
@@ -190,20 +191,20 @@ def findAssets(metadata, media_title, paths, type, parts=[]):
               if not fn.startswith('.') and fn.endswith('-deletedscene') and ext[1:] in config.VIDEO_EXTS:
                 Log('Found %s extra: %s' % ('deleted', f))
                 title = ' '.join(fn.split('-')[:-1])
-                extras.append({'type' : 'deleted', 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
+                extras.append({'type' : 'deleted', 'title' : helpers.unicodize(title), 'file' : os.path.join(path, extras_folder_name, f)})
                 found = True
               else:
                 for key in extra_type_map.keys():
                   if not fn.startswith('.') and fn.endswith('-' + key) and ext[1:] in config.VIDEO_EXTS:
                     Log('Found %s extra: %s' % (key, f))
                     title = ' '.join(fn.split('-')[:-1])
-                    extras.append({'type' : key, 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
+                    extras.append({'type' : key, 'title' : helpers.unicodize(title), 'file' : os.path.join(path, extras_folder_name, f)})
                     found = True
               # Flag unlabeled extras in the extras folder as scene.
               if not found:
                 Log('Found %s extra: %s' % ('Unknown (Flagged as Scene)', f))
                 title = fn
-                extras.append({'type' : 'scene', 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
+                extras.append({'type' : 'scene', 'title' : helpers.unicodize(title), 'file' : os.path.join(path, extras_folder_name, f)})
     
         # Make sure extras are sorted alphabetically and by type.
         type_order = ['trailer', 'behindthescenes', 'interview', 'deleted', 'scene', 'sample', 'featurette', 'short']
