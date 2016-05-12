@@ -186,16 +186,24 @@ def findAssets(metadata, media_title, paths, type, parts=[]):
 
             # Files following the "-extra" convention.
             else:
+              found = False
               if not fn.startswith('.') and fn.endswith('-deletedscene') and ext[1:] in config.VIDEO_EXTS:
                 Log('Found %s extra: %s' % ('deleted', f))
                 title = ' '.join(fn.split('-')[:-1])
                 extras.append({'type' : 'deleted', 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
+                found = True
               else:
                 for key in extra_type_map.keys():
                   if not fn.startswith('.') and fn.endswith('-' + key) and ext[1:] in config.VIDEO_EXTS:
                     Log('Found %s extra: %s' % (key, f))
                     title = ' '.join(fn.split('-')[:-1])
                     extras.append({'type' : key, 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
+                    found = True
+              # Flag unlabeled extras in the extras folder as scene.
+              if not found:
+                Log('Found %s extra: %s' % ('Unknown (Flagged as Scene)', f))
+                title = fn
+                extras.append({'type' : 'scene', 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
     
         # Make sure extras are sorted alphabetically and by type.
         type_order = ['trailer', 'behindthescenes', 'interview', 'deleted', 'scene', 'sample', 'featurette', 'short']
