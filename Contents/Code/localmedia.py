@@ -126,8 +126,13 @@ def findAssets(metadata, media_title, paths, type, parts=[]):
 
         # Look for extras in named directories.
         Log('Looking for local extras in path: ' + path)
+        extras_folder = ''
         for root, dirs, files in os.walk(path):
           for d in dirs:
+            Log('Checking if %s is an Extras folder' % re_strip.sub('', d.lower()))
+            if re_strip.sub('', d.lower()) == 'extras':
+              Log('Found Extras Folder. %s' % (os.path.join(root, d)))
+              extras_folder = os.path.join(root, d)
             for key in extra_type_map.keys():
               if re_strip.sub('', d.lower()).startswith(key):
                 for f in os.listdir(os.path.join(root, d)):
@@ -161,6 +166,26 @@ def findAssets(metadata, media_title, paths, type, parts=[]):
                 Log('Found %s extra: %s' % (key, f))
                 title = ' '.join(fn.split('-')[:-1])
                 extras.append({'type' : key, 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
+    
+        # Look for filenames following the "-extra" convention and a couple of other special cases in the "Extras" Folder.
+        if extras_folder != '':
+          Log('Found Extras Folder. Scanning now')
+          for f in os.listdir(extras_folder):
+
+            (fn, ext) = os.path.splitext(f)
+
+            # Files named exactly 'trailer' or starting with 'movie-trailer'.
+            if (fn == 'trailer' or fn.startswith('movie-trailer')) and not fn.startswith('.') and ext[1:] in config.VIDEO_EXTS:
+              Log('Found trailer extra, renaming with title: ' + media_title)
+              extras.append({'type' : key, 'title' : media_title, 'file' : os.path.join(path, f)})
+
+            # Files following the "-extra" convention.
+            else:
+              for key in extra_type_map.keys():
+                if not fn.startswith('.') and fn.endswith('-' + key) and ext[1:] in config.VIDEO_EXTS:
+                  Log('Found %s extra: %s' % (key, f))
+                  title = ' '.join(fn.split('-')[:-1])
+                  extras.append({'type' : key, 'title' : helpers.unicodize(title), 'file' : os.path.join(path, f)})
     
         # Make sure extras are sorted alphabetically and by type.
         type_order = ['trailer', 'behindthescenes', 'interview', 'deleted', 'scene', 'sample', 'featurette', 'short']
